@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using WebApplication1.Data;
 using WebApplication1.Models;
-using System.Collections.Generic; // Needed for List<>
-using System.Linq; // Needed for LINQ queries
+using System.Text.Json; // Needed for LINQ queries
 
 namespace WebApplication1.Controllers
 {
@@ -106,12 +104,12 @@ namespace WebApplication1.Controllers
         {
             string cartJson = Request.Cookies["Cart"];
             return string.IsNullOrEmpty(cartJson) ? new Dictionary<int, int>() :
-                   JsonConvert.DeserializeObject<Dictionary<int, int>>(cartJson);
+                   JsonSerializer.Deserialize<Dictionary<int, int>>(cartJson);
         }
 
         private void SaveCartToCookies(Dictionary<int, int> cart)
         {
-            string cartJson = JsonConvert.SerializeObject(cart);
+            string cartJson = JsonSerializer.Serialize(cart);
             CookieOptions options = new CookieOptions();
             options.Expires = DateTime.Now.AddDays(7);
             Response.Cookies.Append("Cart", cartJson, options);
