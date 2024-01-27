@@ -1,0 +1,60 @@
+﻿@model List<CartItem>
+
+@{
+    ViewBag.Title = "Your Cart";
+}
+
+<h2>Your Shopping Cart</h2>
+
+@if (Model.Count == 0)
+{
+    <p>Your cart is empty.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>
+                        <form asp-action="UpdateCart" method="post">
+                            <input type="hidden" name="productId" value="@item.ProductId" />
+                            <input type="number" name="quantity" value="@item.Quantity" min="0" />
+                            <input type="submit" value="Update" class="btn btn-primary" />
+                        </form>
+                    </td>
+                    <td>@item.Price.ToString("C")</td>
+                    <td>@((item.Price * item.Quantity).ToString("C"))</td>
+                    <td>
+                        <form asp-action="RemoveFromCart" method="post">
+                            <input type="hidden" name="productId" value="@item.ProductId" />
+                            <input type="submit" value="Remove" class="btn btn-danger" />
+                        </form>
+                    </td>
+                </tr>
+            }
+            <tr>
+                <td></td>
+                <td><strong>Total Quantity:</strong> @Model.Sum(item => item.Quantity)</td>
+                <td><strong>Total Price:</strong> @Model.Sum(item => item.Quantity * item.Price).ToString("C")</td>
+                <td></td>
+                <td>
+                    <form asp-action="ClearCart" asp-controller="Shop" method="post">
+                        <input type="submit" value="Delete All Items" class="btn btn-danger" />
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+}
