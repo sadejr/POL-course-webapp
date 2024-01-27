@@ -3,17 +3,22 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
-using System.Text.Json; // Needed for LINQ queries
+using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
+using Azure.Core;
+using WebApplication1.Helpers;
 
 namespace WebApplication1.Controllers
 {
     public class ShopController : Controller
     {
         private readonly ArticleDbContext _context;
+        private readonly CartHelper _cartHelper;
 
-        public ShopController(ArticleDbContext context)
+        public ShopController(ArticleDbContext context, CartHelper cartHelper)
         {
             _context = context;
+            _cartHelper = cartHelper;
         }
 
         // GET: Categories
@@ -69,8 +74,7 @@ namespace WebApplication1.Controllers
 
         public IActionResult Cart()
         {
-            var cart = GetCartFromCookies();
-            var cartItems = GetCartItems(cart);
+            var cartItems = _cartHelper.GetCart(Request.Cookies["Cart"]);
             return View(cartItems);
         }
 
@@ -113,27 +117,6 @@ namespace WebApplication1.Controllers
             CookieOptions options = new CookieOptions();
             options.Expires = DateTime.Now.AddDays(7);
             Response.Cookies.Append("Cart", cartJson, options);
-        }
-
-        private List<CartItem> GetCartItems(Dictionary<int, int> cart)
-        {
-            var cartItems = new List<CartItem>();
-            foreach (var entry in cart)
-            {
-                var article = _context.Article.FirstOrDefault(a => a.Id == entry.Key);
-                if (article != null)
-                {
-                    cartItems.Add(new CartItem
-                    {
-                        ProductId = article.Id,
-                        Name = article.Name,
-                        Price = article.Price,
-                        Quantity = entry.Value,
-                        Total = entry.Value * article.Price
-                    });
-                }
-            }
-            return cartItems;
         }
     }
 }

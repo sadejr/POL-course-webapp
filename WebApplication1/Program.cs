@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using Microsoft.AspNetCore.Identity;
 using WebApplication1.Models;
+using WebApplication1.Helpers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,8 @@ builder.Services.AddDbContextPool<ArticleDbContext>(options => options.UseSqlSer
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ArticleDbContext>();
+
+builder.Services.AddScoped<CartHelper>();
 
 builder.Services.AddRazorPages();
 builder.Services.Configure<IdentityOptions>(options =>

@@ -1,0 +1,92 @@
+﻿@model Order
+
+@{
+    ViewBag.Title = "Order";
+}
+
+<h2>Order</h2>
+
+<form asp-action="Confirm" method="post">
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="Customer.FirstName" class="control-label">First Name</label>
+                <input asp-for="Customer.FirstName" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Customer.LastName" class="control-label">Last Name</label>
+                <input asp-for="Customer.LastName" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Customer.PhoneNumber" class="control-label">Phone Number</label>
+                <input asp-for="Customer.PhoneNumber" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="Customer.Address" class="control-label">Address</label>
+                <input asp-for="Customer.Address" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Customer.City" class="control-label">City</label>
+                <input asp-for="Customer.City" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Customer.ZipCode" class="control-label">Zip Code</label>
+                <input asp-for="Customer.ZipCode" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Customer.Country" class="control-label">Country</label>
+                <input asp-for="Customer.Country" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label class="control-label">Payment Method</label>
+                <select asp-for="PaymentMethod" class="form-control">
+                    <option value="VISA">VISA</option>
+                    <option value="Bank transfer">Bank transfer</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.CartItems)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>
+                        @item.Quantity
+                    </td>
+                    <td>@item.Price.ToString("C")</td>
+                    <td>@((item.Price * item.Quantity).ToString("C"))</td>
+                </tr>
+            }
+            <tr>
+                <td></td>
+                <td><strong>Total Quantity:</strong> @Model.CartItems.Sum(item => item.Quantity)</td>
+                <td><strong>Total Price:</strong> @Model.CartItems.Sum(item => item.Quantity * item.Price).ToString("C")</td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="form-group">
+        <input type="submit" value="Confirm Order" class="btn btn-primary" />
+    </div>
+</form>

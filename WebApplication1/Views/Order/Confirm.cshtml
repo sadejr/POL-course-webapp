@@ -1,0 +1,23 @@
+﻿@model Order
+
+@{
+    ViewBag.Title = "Order confirmed";
+}
+
+<h2>Your order was successful</h2>
+
+<div>
+    <h5>Contact Information</h5>
+    <p><strong>First Name:</strong> @Model.Customer.FirstName</p>
+    <p><strong>Last Name:</strong> @Model.Customer.LastName</p>
+    <p><strong>Phone number:</strong> @Model.Customer.PhoneNumber</p>
+
+    <h5>Delivery Address</h5>
+    <p><strong>Street:</strong> @Model.Customer.Address</p>
+    <p><strong>City:</strong> @Model.Customer.City</p>
+    <p><strong>Zip Code:</strong> @Model.Customer.ZipCode</p>
+    <p><strong>Country:</strong> @Model.Customer.Country</p>
+
+    <h5>Payment Method</h5>
+    <p>@Model.PaymentMethod</p>
+</div>

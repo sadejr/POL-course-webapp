@@ -11,7 +11,7 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = RoleNames.Administrator)]
     public class CategoriesController : Controller
     {
         private readonly ArticleDbContext _context;

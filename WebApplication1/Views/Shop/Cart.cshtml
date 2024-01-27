@@ -57,4 +57,11 @@ else
             </tr>
         </tbody>
     </table>
+
+    @if (User.IsInRole(RoleNames.Customer))
+    {
+        <form asp-controller="Order" asp-action="Index" method="get">
+            <input type="submit" value="Place Order" class="btn btn-primary" />
+        </form>
+    }
 }
