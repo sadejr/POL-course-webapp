@@ -82,7 +82,7 @@ namespace WebApplication1.Controllers
                     {
                         await imageFile.CopyToAsync(fileStream);
                     }
-                    article.ImagePath = Path.Combine("upload", uniqueFileName);
+                    article.ImagePath = Path.Combine("upload", uniqueFileName); //"upload/image.jpg"
                 }
                 else
                 {

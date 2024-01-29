@@ -4,12 +4,30 @@
     ViewData["Title"] = "Index";
 }
 
+<script>
+    let currentPage = 1;
+</script>
+
 <h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
+<div class="row">
+    <h4>Create new</h4>
+    <div class="col-md-4">
+        <form id="createForm" action="/api/categories" method="post">
+            <div class="form-group">
+                <label for="Name" class="control-label">Name</label>
+                <input type="text" id="Name" name="Name" class="form-control" />
+            </div>
+            <div style="margin-bottom: 10px"></div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+    <div style="margin-bottom: 30px"></div>
+</div>
+
+<table id="all-categories" class="table">
     <thead>
         <tr>
             <th>
@@ -19,17 +37,151 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
     </tbody>
 </table>
+
+<button type="button" class="btn btn-secondary" onclick="nextPage()">Load more</button>
+
+<div class="modal fade" id="edit-modal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit</h5>
+            </div>
+            <div class="modal-body">
+                <input hidden type="text" name="categoryId" id="categoryId" value="" />
+                <form id="editModalForm">
+                    <div class="form-group">
+                        <label for="modalField-name" class="control-label">Name</label>
+                        <input type="text" id="modalField-name" name="Name" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(function () {
+            loadCategories();
+
+            $('#createForm').on('submit', function (e) {
+                e.preventDefault();
+                createCategory();
+            });
+
+            $('#editModalForm').on('submit', function (e) {
+                e.preventDefault();
+                editCategory();
+            });
+
+            $(document).on("click", ".category-edit-modal", function () {
+                var id = $(this).data('id');
+                $(".modal-body #categoryId").val(id);
+
+                let category = getCategory(id);
+
+                $('#edit-modal').modal('show');
+            });
+        });
+
+        function loadCategories(page = 1) {
+            $.ajax({
+                type: "GET",
+                url: `/api/categories?page=${page}`,
+                success: function (data) {
+                    data.forEach(item => {
+                        let newRow = `
+                            <tr>
+                                <td>
+                                    ${item.name}
+                                </td>
+                                <td>
+                                    <a class="category-edit-modal" href="#edit-modal" data-id="${item.id}" data-toggle="modal" data-target="#edit-modal">Edit</a> |
+                                    <a href="/Categories/Details/${item.id}">Details</a> |
+                                    <a href="#" onclick="removeCategory(${item.id})">Delete</a>
+                                </td>
+                            </tr>`;
+                        $('#all-categories').append(newRow);
+                    });
+                }
+            })
+                .fail(function (jqXHR, textStatus) {
+                    console.warn("Recived " + jqXHR.status + " in response code.");
+                });
+        }
+
+        function nextPage() {
+            currentPage++;
+            loadCategories(currentPage);
+        }
+
+        function clearTable() {
+            currentPage = 1;
+            $("#all-categories").empty();
+        }
+
+        function getCategory(id) {
+            $.ajax({
+                type: "GET",
+                url: `/api/categories/${id}`,
+                success: function (data) {
+                    $('#modalField-name').val(data.name);
+                }
+            });
+        }
+
+        function editCategory() {
+            let body = {
+                name: $('#modalField-name').val()
+            };
+            let id = $(".modal-body #categoryId").val();
+
+            $.ajax({
+                type: "PUT",
+                url: `/api/categories/${id}`,
+                contentType: 'application/json',
+                data: JSON.stringify(body),
+                success: function () {
+                    clearTable();
+                    loadCategories();
+                    $('#edit-modal').modal('hide');
+                }
+            });
+        }
+
+        function createCategory() {
+            let body = {
+                name: $('#Name').val()
+            };
+
+            $.ajax({
+                url: 'api/categories',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(body),
+                success: function (response) {
+                    clearTable();
+                    loadCategories();
+                    $('#Name').val("");
+                },
+                error: function (xhr, status, error) {
+                    console.log('Error submitting form:', error);
+                }
+            });
+        }
+
+        function removeCategory(id) {
+            $.ajax({
+                url: `api/categories/${id}`,
+                type: 'DELETE',
+                success: function () {
+                    clearTable();
+                    loadCategories();
+                }
+            })
+        }
+    </script>
+}
