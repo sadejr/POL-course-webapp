@@ -1,53 +1,262 @@
-﻿@model IEnumerable<WebApplication1.Models.Article>
+﻿@model SelectList
 
 @{
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<script>
+    let currentPage = 1;
+</script>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
+<h1>Articles</h1>
+
+<div class="row">
+    <h4>Create new</h4>
+    <div class="col-md-4">
+        <form id="createForm" action="/api/categories" method="post">
+            <div class="form-group">
+                <label for="Name" class="control-label">Name</label>
+                <input type="text" id="Name" name="Name" class="form-control" />
+                <label for="Price" class="control-label">Price</label>
+                <input type="number" id="Price" name="Price" class="form-control" min="0" step="0.01" />
+                <label for="Category" class="control-label">Category</label>
+                <select id="Category" name="Category" class="form-control"></select>
+            </div>
+            <div style="margin-bottom: 10px"></div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+    <div style="margin-bottom: 30px"></div>
+</div>
+
+<table id="all-articles" class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Name)
+                Name
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Price)
+                Price
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Category)
+                Category
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ImagePath)
+                Image
             </th>
             <th></th>
         </tr>
     </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Category.Name)
-            </td>
-            <td>
-                <img src="@Url.Content("~/" + item.ImagePath)" alt="Photo" style="width: 100px;" />
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
+    <tbody></tbody>
 </table>
+
+<button type="button" class="btn btn-secondary" onclick="nextPage()">Load more</button>
+
+<div class="modal fade" id="edit-modal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit</h5>
+            </div>
+            <div class="modal-body">
+                <input hidden type="text" name="articleId" id="articleId" value="" />
+                <form id="editModalForm">
+                    <div class="form-group">
+                        <label for="modalField-name" class="control-label">Name</label>
+                        <input type="text" id="modalField-name" name="Name" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="modalField-price" class="control-label">Price</label>
+                        <input type="text" id="modalField-price" name="Price" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                            <label for="modalField-category" class="control-label">Category</label>
+                            <select id="modalField-category" name="modalField-category" class="form-control"></select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var data = @Json.Serialize(Model);
+        var select = document.getElementById('Category');
+        data.forEach(function (item) {
+            var option = document.createElement('option');
+            option.value = item.value;
+            option.textContent = item.text;
+            select.appendChild(option);
+        });
+
+        var modalFieldSelect = document.getElementById('modalField-category');
+        data.forEach(function (item) {
+            var option = document.createElement('option');
+            option.value = item.value;
+            option.textContent = item.text;
+            modalFieldSelect.appendChild(option);
+        });
+
+
+
+        $(function () {
+            loadArticles();
+
+            $('#createForm').on('submit', function (e) {
+                e.preventDefault();
+                createArticle();
+            });
+
+            $('#editModalForm').on('submit', function (e) {
+                e.preventDefault();
+                editArticle();
+            });
+
+            $(document).on("click", ".article-edit-modal", function () {
+                var id = $(this).data('id');
+                $(".modal-body #articleId").val(id);
+
+                let article = getArticle(id);
+
+                $('#edit-modal').modal('show');
+            });
+
+        });
+
+        function loadArticles(page = 1) {
+            $.ajax({
+                type: "GET",
+                url: `api/articles?page=${page}`,
+                success: function (data) {
+                    data.forEach(item => {
+                        let newRow = `
+                                <tr>
+                                    <td>
+                                        ${item.name}
+                                    </td>
+                                    <td>
+                                        ${item.price}
+                                    </td>
+                                    <td>
+                                        ${item.category.name}
+                                    </td>
+                                    <td>
+                                        <img src="image/default.jpg" alt="Photo" style="width: 100px;"/>
+                                    </td>
+                                    <td>
+                                        <a class="article-edit-modal" href="#edit-modal" data-id="${item.id}" data-toggle="modal" data-target="#edit-modal">Edit</a> |
+                                        <a href="/Articles/Details/${item.id}">Details</a> |
+                                        <a href="#" onclick="removeArticle(${item.id})">Delete</a>
+                                    </td>
+                                </tr>`;
+                        $('#all-articles > tbody').append(newRow);
+                    });
+                },
+                fail: function (jqXHR, textStatus) {
+                    console.warn("Received " + jqXHR.status + " in response code.");
+                }
+            });
+        }
+
+        function nextPage() {
+            currentPage++;
+            loadArticles(currentPage);
+        }
+
+        function editArticle() {
+            let body = {
+                name: $('#modalField-name').val(),
+                price: parseFloat($('#modalField-price').val()),
+                categoryId: parseInt($('#modalField-category').val())
+            };
+            let id = $(".modal-body #articleId").val();
+
+            $.ajax({
+                type: "PUT",
+                url: `/api/articles/${id}`,
+                contentType: 'application/json',
+                data: JSON.stringify(body),
+                success: function () {
+                    clearTable();
+                    loadArticles();
+                    $('#edit-modal').modal('hide');
+                }
+            });
+        }
+
+        function getArticle(id) {
+            $.ajax({
+                type: "GET",
+                url: `/api/articles/${id}`,
+                success: function (data) {
+                    $('#modalField-name').val(data.name);
+                }
+            });
+        }
+
+        function editCategory() {
+            let body = {
+                name: $('#modalField-name').val()
+            };
+            let id = $(".modal-body #categoryId").val();
+
+            $.ajax({
+                type: "PUT",
+                url: `/api/categories/${id}`,
+                contentType: 'application/json',
+                data: JSON.stringify(body),
+                success: function () {
+                    clearTable();
+                    loadCategories();
+                    $('#edit-modal').modal('hide');
+                }
+            });
+        }
+
+        function createArticle() {
+            let body = {
+                name: $('#Name').val(),
+                price: parseFloat($('#Price').val()),
+                categoryId: parseInt($('#Category').val())
+            };
+
+            $.ajax({
+                url: 'api/articles',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(body),
+                success: function (response) {
+                    clearTable();
+                    loadArticles();
+                    $('#Name').val("");
+                    $('#Price').val("");
+                    $('#Category').val("");
+                },
+                error: function (xhr, status, error) {
+                    console.log('Error submitting form:', error);
+                }
+            });
+        }
+
+        function clearTable() {
+            currentPage = 1;
+            $("#all-articles > tbody").empty();
+        }
+
+        function removeArticle(id) {
+            $.ajax({
+                url: `api/articles/${id}`,
+                type: 'DELETE',
+                success: function () {
+                    clearTable();
+                    loadArticles();
+                }
+            });
+        }
+
+    </script>
+}

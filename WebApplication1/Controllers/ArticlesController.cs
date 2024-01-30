@@ -26,8 +26,10 @@ namespace WebApplication1.Controllers
         // GET: Articles
         public async Task<IActionResult> Index()
         {
-            var articleDbContext = _context.Article.Include(a => a.Category);
-            return View(await articleDbContext.ToListAsync());
+            var categories = _context.Categories.ToList();
+            var categoriesSelect = new SelectList(categories, "Id", "Name");
+
+            return View(categoriesSelect);
         }
 
         // GET: Articles/Details/5

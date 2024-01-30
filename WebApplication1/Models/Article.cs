@@ -19,11 +19,11 @@ namespace WebApplication1.Models
         [Column(TypeName = "decimal(18,2)")]
         public double Price { get; set; }
         [AllowNull]
-        [DisplayName ("Photo")]
-        public string ImagePath { get; set; }
+        [DisplayName("Photo")]
+        public string? ImagePath { get; set; } = "image/default.jpg";
         [ForeignKey("Category")]
         public int CategoryId { get; set; }
-        public Category Category { get; set; }
+        public Category? Category { get; set; }
 
         public override bool Equals(object? obj)
         {
@@ -34,20 +34,6 @@ namespace WebApplication1.Models
         public override string ToString()
         {
             return $"Article ID: {Id}, Name: {Name}, Price: {Price}, Category: {Category.Name}";
-        }
-
-        public Article()
-        {
-            Category = new Category();
-        }
-
-        public Article(int id, string name, double price, string image, Category category)
-        {
-            Id = id;
-            Name = name;
-            Price = price;
-            ImagePath = image;
-            Category = category;
         }
     }
 }
